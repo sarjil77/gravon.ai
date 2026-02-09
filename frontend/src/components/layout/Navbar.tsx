@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
@@ -13,6 +13,16 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
+  // Handle hash-based scroll navigation
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+    }
+  }, [location]);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       <div className="glass-card mx-4 mt-4 md:mx-8">
@@ -22,7 +32,7 @@ const Navbar = () => {
               <span className="text-sm font-bold text-primary-foreground">C</span>
             </div>
             <span className="font-display text-xl font-bold text-foreground">
-              Calvio<span className="text-gradient">.ai</span>
+              Clavio<span className="text-gradient">.ai</span>
             </span>
           </Link>
 

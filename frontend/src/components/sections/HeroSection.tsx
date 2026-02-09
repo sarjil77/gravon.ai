@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { MessageSquare, Brain, Zap, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const ConnectionGraphic = () => (
   <div className="relative w-full max-w-lg mx-auto h-64 md:h-80">
@@ -52,7 +53,7 @@ const ConnectionGraphic = () => (
     >
       <div className="glass-card p-5 md:p-6 border-purple/30">
         <Brain className="h-8 w-8 md:h-10 md:w-10 text-purple" />
-        <p className="text-xs text-muted-foreground mt-2">Calvio AI</p>
+        <p className="text-xs text-muted-foreground mt-2">Clavio AI</p>
       </div>
     </motion.div>
   </div>
@@ -87,13 +88,13 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="glow-button-pulse text-base flex items-center gap-2">
+            <Link to="/pricing" className="glow-button-pulse text-base flex items-center gap-2">
               Start Your 7-Day Free Trial
               <ArrowRight className="h-5 w-5" />
-            </button>
-            <button className="glass-card px-8 py-4 text-foreground font-medium hover:bg-muted/30 transition-colors">
+            </Link>
+            <a href="/#features" className="glass-card px-8 py-4 text-foreground font-medium hover:bg-muted/30 transition-colors">
               See How It Works
-            </button>
+            </a>
           </div>
         </motion.div>
 

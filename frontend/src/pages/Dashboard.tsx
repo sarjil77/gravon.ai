@@ -10,7 +10,7 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/layout/Navbar";
 
 const automations = [
   {

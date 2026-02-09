@@ -1,5 +1,5 @@
-import Navbar from "../components/Navbar";
-import PricingSection from "../components/PricingSection";
+import Navbar from "../components/layout/Navbar";
+import PricingSection from "../components/sections/PricingSection";
 
 const Pricing = () => {
   return (

@@ -1,73 +1,56 @@
-# Welcome to your Lovable project
+# Clavio AI
 
-## Project info
+No-code WhatsApp AI Assistant Platform. Connect your WhatsApp, choose a template, and launch your AI assistant in under 60 seconds.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Project Structure
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+clavio-ai/
+├── frontend/          React + TypeScript + Vite (Landing page & Dashboard)
+├── backend/           Python + FastAPI (API & AI Wrappers)
+├── docker-compose.yml Run both services together
+└── README.md          You are here
 ```
 
-**Edit a file directly in GitHub**
+## Quick Start
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend
 
-**Use GitHub Codespaces**
+```bash
+cd frontend
+npm install
+npm run dev          # → http://localhost:8080
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Backend
 
-## What technologies are used for this project?
+```bash
+cd backend
+pip install -e ".[dev]"
+cp .env.example .env   # Add your API keys
+uvicorn app.main:app --reload --port 8000
+```
 
-This project is built with:
+### Both (Docker)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+docker-compose up
+```
 
-## How can I deploy this project?
+## AI Providers Supported
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+| Provider  | Wrapper                          | Default Model            |
+| --------- | -------------------------------- | ------------------------ |
+| OpenAI    | `app/wrappers/openai_wrapper`    | gpt-4o                   |
+| Anthropic | `app/wrappers/anthropic_wrapper` | claude-sonnet-4-20250514 |
+| Google    | `app/wrappers/gemini_wrapper`    | gemini-2.0-flash         |
 
-## Can I connect a custom domain to my Lovable project?
+## Tech Stack
 
-Yes, you can!
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion
+- **Backend:** Python 3.10+, FastAPI, Pydantic
+- **AI SDKs:** OpenAI, Anthropic, Google Generative AI
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT
