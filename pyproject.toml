@@ -1,0 +1,36 @@
+[project]
+name = "clavio-ai-backend"
+version = "0.1.0"
+description = "Clavio AI - Backend API & AI Wrappers"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "httpx>=0.27.0",
+    "openai>=1.35.0",
+    "anthropic>=0.30.0",
+    "google-generativeai>=0.7.0",
+    "supabase>=2.7.0",
+    "gotrue>=2.12.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

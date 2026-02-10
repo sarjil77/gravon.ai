@@ -45,15 +45,28 @@ const ConnectionGraphic = () => (
       <Zap className="h-6 w-6 text-cyan" />
     </motion.div>
 
-    {/* Calvio brain */}
+    {/* Gravon.ai logo node */}
     <motion.div
       animate={{ y: [0, -8, 0] }}
       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       className="absolute right-[10%] top-1/2 -translate-y-1/2"
     >
-      <div className="glass-card p-5 md:p-6 border-purple/30">
-        <Brain className="h-8 w-8 md:h-10 md:w-10 text-purple" />
-        <p className="text-xs text-muted-foreground mt-2">Clavio AI</p>
+      <div className="glass-card p-5 md:p-6 border-purple/30 flex flex-col items-center">
+        <motion.svg
+          width="40" height="40" viewBox="0 0 64 64" fill="none"
+          whileHover={{ rotate: 20, scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <defs>
+            <linearGradient id="heroG" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#7C3AED" />
+              <stop offset="100%" stopColor="#06B6D4" />
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#heroG)" />
+          <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="800" fontSize="38" fill="white">G</text>
+        </motion.svg>
+        <p className="text-xs text-muted-foreground mt-2">Gravon.ai</p>
       </div>
     </motion.div>
   </div>
@@ -88,7 +101,7 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/pricing" className="glow-button-pulse text-base flex items-center gap-2">
+            <Link to="/auth" className="glow-button-pulse text-base flex items-center gap-2">
               Start Your 7-Day Free Trial
               <ArrowRight className="h-5 w-5" />
             </Link>

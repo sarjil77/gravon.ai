@@ -25,6 +25,10 @@ venv/
 env/
 .env
 
+# WhatsApp service
+whatsapp-service/node_modules/
+whatsapp-service/sessions/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

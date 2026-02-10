@@ -19,7 +19,7 @@ const CTASection = () => {
             Join thousands of creators and small businesses already using Clavio.ai.
           </p>
           <Link
-            to="/pricing"
+            to="/auth"
             className="glow-button-pulse text-base flex items-center gap-2 mx-auto"
           >
             Start Your 7-Day Free Trial

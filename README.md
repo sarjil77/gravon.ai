@@ -1,11 +1,12 @@
-# Clavio AI
 
-No-code WhatsApp AI Assistant Platform. Connect your WhatsApp, choose a template, and launch your AI assistant in under 60 seconds.
+# Gravon.ai
+
+AI for Growth-Driven Businesses. No-code WhatsApp AI Assistant Platform. Connect WhatsApp, choose a template, and launch your AI assistant in under 60 seconds.
 
 ## Project Structure
 
 ```
-clavio-ai/
+gravon-ai/
 ├── frontend/          React + TypeScript + Vite (Landing page & Dashboard)
 ├── backend/           Python + FastAPI (API & AI Wrappers)
 ├── docker-compose.yml Run both services together

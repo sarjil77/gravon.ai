@@ -3,16 +3,16 @@ const Footer = () => {
     <footer className="border-t border-border py-8 px-4">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
-          © 2026 Clavio.ai — All rights reserved.
+          © 2026 Gravon.ai — AI for Growth-Driven Businesses. All rights reserved.
         </p>
         <div className="flex gap-6 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-foreground transition-colors">
+          <a href="/privacy" className="hover:text-foreground transition-colors">
             Privacy
           </a>
-          <a href="#" className="hover:text-foreground transition-colors">
+          <a href="/terms" className="hover:text-foreground transition-colors">
             Terms
           </a>
-          <a href="#" className="hover:text-foreground transition-colors">
+          <a href="mailto:support@gravon.ai" className="hover:text-foreground transition-colors">
             Contact
           </a>
         </div>
