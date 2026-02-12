@@ -32,7 +32,7 @@ const Navbar = () => {
               <span className="text-sm font-bold text-primary-foreground">C</span>
             </div>
             <span className="font-display text-xl font-bold text-foreground">
-              Clavio<span className="text-gradient">.ai</span>
+              Gravon<span className="text-gradient">.ai</span>
             </span>
           </Link>
 

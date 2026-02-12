@@ -94,7 +94,7 @@ async def incoming_message(payload: IncomingMessagePayload):
     )
 
     if not bot_result.data:
-        return {"reply": "⚠️ No active bot configured. Visit your Clavio dashboard to set one up."}
+        return {"reply": "⚠️ No active bot configured. Visit your Gravon dashboard to set one up."}
 
     bot = bot_result.data[0]
 

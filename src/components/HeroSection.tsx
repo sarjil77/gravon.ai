@@ -53,7 +53,7 @@ const ConnectionGraphic = () => (
     >
       <div className="glass-card p-5 md:p-6 border-purple/30">
         <Brain className="h-8 w-8 md:h-10 md:w-10 text-purple" />
-        <p className="text-xs text-muted-foreground mt-2">Clavio AI</p>
+        <p className="text-xs text-muted-foreground mt-2">Gravon AI</p>
       </div>
     </motion.div>
   </div>

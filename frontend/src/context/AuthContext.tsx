@@ -30,8 +30,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check for existing session on mount
   useEffect(() => {
-    const stored = localStorage.getItem("clavio_user");
-    const token = localStorage.getItem("clavio_access_token");
+    const stored = localStorage.getItem("Gravon_user");
+    const token = localStorage.getItem("Gravon_access_token");
     if (stored && token) {
       setUser(JSON.parse(stored));
     }
@@ -51,9 +51,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const data = await res.json();
-    localStorage.setItem("clavio_access_token", data.access_token);
-    localStorage.setItem("clavio_refresh_token", data.refresh_token);
-    localStorage.setItem("clavio_user", JSON.stringify(data.user));
+    localStorage.setItem("Gravon_access_token", data.access_token);
+    localStorage.setItem("Gravon_refresh_token", data.refresh_token);
+    localStorage.setItem("Gravon_user", JSON.stringify(data.user));
     setUser(data.user);
   };
 
@@ -76,16 +76,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error(data.message || "Check your email to confirm your account, then log in.");
     }
 
-    localStorage.setItem("clavio_access_token", data.access_token);
-    localStorage.setItem("clavio_refresh_token", data.refresh_token);
-    localStorage.setItem("clavio_user", JSON.stringify(data.user));
+    localStorage.setItem("Gravon_access_token", data.access_token);
+    localStorage.setItem("Gravon_refresh_token", data.refresh_token);
+    localStorage.setItem("Gravon_user", JSON.stringify(data.user));
     setUser(data.user);
   };
 
   const logout = () => {
-    localStorage.removeItem("clavio_access_token");
-    localStorage.removeItem("clavio_refresh_token");
-    localStorage.removeItem("clavio_user");
+    localStorage.removeItem("Gravon_access_token");
+    localStorage.removeItem("Gravon_refresh_token");
+    localStorage.removeItem("Gravon_user");
     setUser(null);
   };
 

@@ -16,7 +16,7 @@ const CTASection = () => {
             <span className="text-gradient">AI assistant?</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            Join thousands of creators and small businesses already using Clavio.ai.
+            Join thousands of creators and small businesses already using Gravon.ai.
           </p>
           <Link
             to="/auth"

@@ -1,7 +1,7 @@
 [project]
-name = "clavio-ai-backend"
+name = "Gravon-ai-backend"
 version = "0.1.0"
-description = "Clavio AI - Backend API & AI Wrappers"
+description = "Gravon AI - Backend API & AI Wrappers"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.111.0",

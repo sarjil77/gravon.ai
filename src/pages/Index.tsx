@@ -27,7 +27,7 @@ const Index = () => {
               <span className="text-gradient">AI assistant?</span>
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Join thousands of creators and small businesses already using Clavio.ai.
+              Join thousands of creators and small businesses already using Gravon.ai.
             </p>
             <Link to="/pricing" className="glow-button-pulse text-base flex items-center gap-2 mx-auto">
               Start Your 7-Day Free Trial
@@ -41,7 +41,7 @@ const Index = () => {
       <footer className="border-t border-border py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2026 Clavio.ai — All rights reserved.
+            © 2026 Gravon.ai — All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>

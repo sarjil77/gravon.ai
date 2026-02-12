@@ -1,7 +1,7 @@
 {
-  "name": "clavio-whatsapp-service",
+  "name": "Gravon-whatsapp-service",
   "version": "1.0.0",
-  "description": "Multi-tenant WhatsApp service using Baileys for Clavio AI",
+  "description": "Multi-tenant WhatsApp service using Baileys for Gravon AI",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

@@ -1,5 +1,5 @@
 -- ============================================================
--- Clavio AI — Supabase SQL Setup
+-- Gravon AI — Supabase SQL Setup
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ============================================================
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- Clavio AI — Bots & WhatsApp Sessions Tables
+-- Gravon AI — Bots & WhatsApp Sessions Tables
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- (Run AFTER the initial supabase_setup.sql)
 -- ============================================================

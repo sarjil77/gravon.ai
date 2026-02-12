@@ -5,7 +5,7 @@ from app.config import settings
 from app.routes import auth, bots, whatsapp
 
 app = FastAPI(
-    title="Clavio AI",
+    title="Gravon AI",
     description="No-code WhatsApp AI Assistant Platform",
     version="0.1.0",
 )
@@ -25,4 +25,4 @@ app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["WhatsApp"])
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "service": "clavio-ai"}
+    return {"status": "healthy", "service": "Gravon-ai"}

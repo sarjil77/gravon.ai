@@ -21,7 +21,7 @@ if (!fs.existsSync(SESSIONS_DIR)) {
 const logger = pino({ level: "silent" }); // suppress baileys noise
 
 /**
- * Manages multiple WhatsApp sessions (one per Clavio user).
+ * Manages multiple WhatsApp sessions (one per Gravon user).
  *
  *   sessions     – live Baileys socket instances keyed by userId
  *   qrCodes      – latest QR data URI keyed by userId
@@ -173,7 +173,7 @@ class SessionManager {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, logger),
       },
-      browser: ["Clavio AI", "Chrome", "1.0.0"],
+      browser: ["Gravon AI", "Chrome", "1.0.0"],
       generateHighQualityLinkPreview: false,
     });
 

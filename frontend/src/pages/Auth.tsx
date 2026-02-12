@@ -57,7 +57,7 @@ const Auth = () => {
             <span className="text-lg font-bold text-primary-foreground">C</span>
           </div>
           <span className="font-display text-2xl font-bold text-foreground">
-            Clavio<span className="text-gradient">.ai</span>
+            Gravon<span className="text-gradient">.ai</span>
           </span>
         </Link>
 
@@ -69,7 +69,7 @@ const Auth = () => {
             </h1>
             <p className="text-sm text-muted-foreground">
               {isLogin
-                ? "Log in to your Clavio.ai account"
+                ? "Log in to your Gravon.ai account"
                 : "7 days free. No credit card required."}
             </p>
           </div>

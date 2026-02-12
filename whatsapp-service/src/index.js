@@ -12,7 +12,7 @@ app.use(express.json());
 // ── Health ──────────────────────────────────────────────────────────────────
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "healthy", service: "clavio-whatsapp", sessions: sessionManager.listSessions().length });
+  res.json({ status: "healthy", service: "Gravon-whatsapp", sessions: sessionManager.listSessions().length });
 });
 
 // ── Start session / generate QR ─────────────────────────────────────────────
@@ -119,7 +119,7 @@ sessionManager.onMessage = async (userId, msg) => {
 // ── Start ───────────────────────────────────────────────────────────────────
 
 app.listen(PORT, async () => {
-  console.log(`\n🟢 Clavio WhatsApp Service running on http://localhost:${PORT}`);
+  console.log(`\n🟢 Gravon WhatsApp Service running on http://localhost:${PORT}`);
   console.log(`   Forwarding messages to ${PYTHON_BACKEND}\n`);
 
   // Restore any previously authenticated sessions
