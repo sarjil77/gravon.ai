@@ -1,36 +1,36 @@
 import { motion } from "framer-motion";
-import { Shield, Zap, Users, Sparkles, MessageSquare, BarChart3 } from "lucide-react";
+import { Shield, Zap, Bot, Sparkles, BarChart3, RefreshCw } from "lucide-react";
 
 const features = [
   {
-    icon: MessageSquare,
-    title: "One-Click WhatsApp",
-    description: "Scan a QR code and your AI is live on WhatsApp. No API keys, no setup docs.",
+    icon: Zap,
+    title: "One-Click Deploy",
+    description: "Paste your bot token and we spin up a fully-configured AI assistant in under 60 seconds.",
   },
   {
-    icon: Sparkles,
-    title: "Smart Templates",
-    description: "Choose from Customer Support, Sales Closer, or Personal Assistant — ready in seconds.",
+    icon: Bot,
+    title: "Multi-Model Choice",
+    description: "Claude, GPT-4o, or Gemini — pick the brain behind your bot. Switch anytime.",
   },
   {
     icon: BarChart3,
-    title: "Live Analytics",
-    description: "See messages, response times, and satisfaction scores in real-time on your dashboard.",
+    title: "Usage Dashboard",
+    description: "Track messages, uptime, and token usage in real-time from your control panel.",
   },
   {
     icon: Shield,
-    title: "Enterprise Security",
-    description: "End-to-end encryption and SOC 2 compliant infrastructure for your peace of mind.",
+    title: "Fully Managed Infra",
+    description: "We handle servers, updates, and scaling. You focus on what your bot does.",
   },
   {
-    icon: Zap,
-    title: "Instant Automations",
-    description: "Set up workflows with simple toggles. No flowcharts, no code, no confusion.",
+    icon: RefreshCw,
+    title: "Always Online",
+    description: "24/7 uptime with automatic restarts. Your bot never sleeps.",
   },
   {
-    icon: Users,
-    title: "Team Collaboration",
-    description: "Invite your team, assign roles, and manage everything from one workspace.",
+    icon: Sparkles,
+    title: "Powered by OpenClaw",
+    description: "Built on the #1 open-source AI assistant with 190k+ GitHub stars.",
   },
 ];
 

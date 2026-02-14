@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Mail, Lock, User, Eye, EyeOff, Zap } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -15,6 +15,14 @@ const Auth = () => {
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Wizard state passed from homepage DeployWizard
+  const wizardState = location.state as {
+    botToken?: string;
+    model?: string;
+    channel?: string;
+  } | null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +40,8 @@ const Auth = () => {
         }
         await register(email, password, fullName);
       }
-      navigate("/dashboard");
+      // Forward wizard state so Dashboard can auto-deploy
+      navigate("/dashboard", { state: wizardState || undefined });
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -61,15 +70,33 @@ const Auth = () => {
           </span>
         </Link>
 
+        {/* Wizard context banner */}
+        {wizardState?.botToken && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card px-4 py-3 mb-4 flex items-center gap-3 text-sm"
+          >
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple/20 to-cyan/20 flex items-center justify-center shrink-0">
+              <Zap className="h-4 w-4 text-cyan" />
+            </div>
+            <span className="text-muted-foreground">
+              Sign up to deploy your <strong className="text-foreground">{wizardState.model}</strong> bot on Telegram
+            </span>
+          </motion.div>
+        )}
+
         {/* Card */}
         <div className="glass-card p-8">
           <div className="text-center mb-6">
             <h1 className="font-display text-2xl font-bold mb-2">
-              {isLogin ? "Welcome back" : "Start your free trial"}
+              {isLogin ? "Welcome back" : wizardState?.botToken ? "Almost there!" : "Start your free trial"}
             </h1>
             <p className="text-sm text-muted-foreground">
               {isLogin
                 ? "Log in to your Gravon.ai account"
+                : wizardState?.botToken
+                ? "Create an account and your bot deploys instantly."
                 : "7 days free. No credit card required."}
             </p>
           </div>

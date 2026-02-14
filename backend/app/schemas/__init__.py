@@ -85,3 +85,46 @@ class AuthResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+# ── Tenant Schemas (Telegram bot provisioning) ────────────────────────────
+
+class TenantCreateRequest(BaseModel):
+    bot_token: str = Field(min_length=10, description="Telegram bot token from @BotFather")
+    ai_model: str = Field(
+        default="anthropic/claude-sonnet-4-20250514",
+        description="AI model identifier",
+    )
+    channel: str = Field(default="telegram", pattern="^(telegram|discord|whatsapp)$")
+
+
+class TenantResponse(BaseModel):
+    id: str
+    user_id: str
+    bot_token: str
+    bot_username: str | None = None
+    ai_model: str
+    channel: str
+    container_id: str | None = None
+    status: str
+    credits_used: int
+    credits_limit: int
+    plan: str
+    error_message: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class TenantActionResponse(BaseModel):
+    tenant_id: str
+    action: str
+    success: bool
+    message: str
+
+
+class UsageLogResponse(BaseModel):
+    id: str
+    tenant_id: str
+    msg_count: int
+    tokens_used: int
+    logged_at: datetime | None = None

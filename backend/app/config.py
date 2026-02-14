@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     # WhatsApp Service (Node.js Baileys)
     whatsapp_service_url: str = "http://localhost:3001"
 
+    # Stripe
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_starter: str = ""   # Stripe Price ID for $9/mo
+    stripe_price_pro: str = ""       # Stripe Price ID for $29/mo
+    stripe_price_agency: str = ""    # Stripe Price ID for $99/mo
+
     model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8"}
 
 

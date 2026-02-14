@@ -5,8 +5,8 @@ import { Menu, X, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const navItems = [
-  { label: "Features", href: "/#features" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Deploy", href: "/#deploy" },
+  { label: "Pricing", href: "/#pricing" },
   { label: "Dashboard", href: "/dashboard" },
 ];
 
