@@ -95,6 +95,7 @@ class TenantCreateRequest(BaseModel):
         default="anthropic/claude-sonnet-4-20250514",
         description="AI model identifier",
     )
+    api_key: str | None = Field(default=None, description="User-supplied AI provider API key (overrides server default)")
     channel: str = Field(default="telegram", pattern="^(telegram|discord|whatsapp)$")
 
 

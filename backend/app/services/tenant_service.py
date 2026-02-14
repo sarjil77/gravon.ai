@@ -5,11 +5,30 @@ Docker containers, and manages lifecycle (start / stop / restart / destroy).
 
 import json
 import asyncio
+import os
+import secrets
+import subprocess
+import tempfile
+import logging
 import httpx
+from pathlib import Path
 from typing import Any
 
 from app.config import settings
 from app.database import supabase_admin
+
+logger = logging.getLogger(__name__)
+
+# Map short model ids (from frontend) to OpenClaw provider/model strings
+_MODEL_MAP: dict[str, str] = {
+    "anthropic": "anthropic/claude-sonnet-4-5",
+    "openai": "openai/gpt-4o",
+    "gemini": "google/gemini-2.0-flash",
+}
+
+# Directory to store per-tenant OpenClaw configs
+_CONFIG_DIR = Path(tempfile.gettempdir()) / "gravon_configs"
+_CONFIG_DIR.mkdir(exist_ok=True)
 
 
 # ── Telegram Bot Token Validation ────────────────────────────────────────────
@@ -34,27 +53,62 @@ async def validate_telegram_token(bot_token: str) -> dict[str, Any]:
 
 # ── OpenClaw Config Generation ───────────────────────────────────────────────
 
-def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "telegram") -> str:
-    """Return a JSON5-compatible openclaw.json for the tenant container."""
+def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "telegram", api_key: str | None = None) -> str:
+    """Return an openclaw.json config for the tenant container."""
+    # Resolve full model identifier
+    model_id = _MODEL_MAP.get(ai_model, ai_model)
+
+    # Generate a random gateway token for this tenant
+    gw_token = secrets.token_hex(32)
+
     config: dict[str, Any] = {
-        "agent": {
-            "model": ai_model,
-        },
-        "channels": {},
-        "models": {
-            "providers": {
-                "anthropic": {"apiKey": settings.anthropic_api_key},
-                "openai": {"apiKey": settings.openai_api_key},
-                "google": {"apiKey": settings.google_api_key},
+        # Pass API keys as environment variables (OpenClaw reads them natively)
+        "env": {},
+        # Use agents.defaults (not the deprecated "agent" key)
+        "agents": {
+            "defaults": {
+                "model": {"primary": model_id},
             },
         },
+        "channels": {},
         "gateway": {
             "port": 18789,
+            "bind": "lan",
+            "auth": {
+                "mode": "token",
+                "token": gw_token,
+            },
         },
     }
 
+    # Inject provider API keys as env vars
+    # Prefer user-supplied key; fall back to server-wide keys from .env
+    import logging
+    _log = logging.getLogger(__name__)
+    _log.info("generate_openclaw_config: api_key=%s model_id=%s", api_key[:20] + "..." if api_key else None, model_id)
+    if api_key:
+        # Detect provider from model_id and set the right env var
+        if "anthropic" in model_id:
+            config["env"]["ANTHROPIC_API_KEY"] = api_key
+        elif "openai" in model_id:
+            config["env"]["OPENAI_API_KEY"] = api_key
+        elif "google" in model_id or "gemini" in model_id:
+            config["env"]["GEMINI_API_KEY"] = api_key
+        else:
+            # Fallback: set for all providers
+            config["env"]["ANTHROPIC_API_KEY"] = api_key
+    else:
+        # Use server-side keys from settings
+        if settings.anthropic_api_key and not settings.anthropic_api_key.startswith("sk-your"):
+            config["env"]["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
+        if settings.openai_api_key and not settings.openai_api_key.startswith("sk-your"):
+            config["env"]["OPENAI_API_KEY"] = settings.openai_api_key
+        if settings.google_api_key and not settings.google_api_key.startswith("your-"):
+            config["env"]["GEMINI_API_KEY"] = settings.google_api_key
+
     if channel == "telegram":
         config["channels"]["telegram"] = {
+            "enabled": True,
             "botToken": bot_token,
             "dmPolicy": "open",
             "allowFrom": ["*"],
@@ -68,19 +122,26 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
 _PORT_COUNTER_START = 19000  # We'll allocate ports starting here
 
 
-async def _run_cmd(cmd: str) -> tuple[str, str, int]:
-    """Run a shell command and return (stdout, stderr, returncode)."""
-    proc = await asyncio.create_subprocess_shell(
+def _run_cmd_sync(cmd: str) -> tuple[str, str, int]:
+    """Run a shell command synchronously and return (stdout, stderr, returncode)."""
+    result = subprocess.run(
         cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+        shell=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
-    stdout, stderr = await proc.communicate()
     return (
-        stdout.decode().strip(),
-        stderr.decode().strip(),
-        proc.returncode or 0,
+        result.stdout.strip(),
+        result.stderr.strip(),
+        result.returncode,
     )
+
+
+async def _run_cmd(cmd: str) -> tuple[str, str, int]:
+    """Run a shell command in a thread pool (safe on Windows with any event loop)."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _run_cmd_sync, cmd)
 
 
 async def _next_port() -> int:
@@ -98,29 +159,40 @@ async def _next_port() -> int:
     return _PORT_COUNTER_START
 
 
-async def provision_container(tenant_id: str, bot_token: str, ai_model: str, channel: str) -> dict:
+async def provision_container(tenant_id: str, bot_token: str, ai_model: str, channel: str, api_key: str | None = None) -> dict:
     """
     Spin up an OpenClaw Docker container for a tenant.
     Returns {container_id, port} on success, raises on failure.
     """
     port = await _next_port()
-    config_json = generate_openclaw_config(bot_token, ai_model, channel)
+    config_json = generate_openclaw_config(bot_token, ai_model, channel, api_key=api_key)
 
     container_name = f"gravon-tenant-{tenant_id[:8]}"
 
+    # Write config to a per-tenant directory (OpenClaw needs write access beside the config)
+    tenant_dir = _CONFIG_DIR / tenant_id
+    tenant_dir.mkdir(parents=True, exist_ok=True)
+    config_path = tenant_dir / "openclaw.json"
+    config_path.write_text(config_json, encoding="utf-8")
+
+    # Convert to Docker-compatible path (forward slashes)
+    dir_mount = str(tenant_dir).replace("\\", "/")
+
     # Build the docker run command
-    # We pass the config via an environment variable and use the official image
+    # Mount the config directory to ~/.openclaw (default path OpenClaw looks at)
+    # This lets OpenClaw read AND write (doctor auto-fix, sessions, etc.)
     docker_cmd = (
-        f"docker run -d "
-        f"--name {container_name} "
-        f"--restart unless-stopped "
-        f"-p {port}:18789 "
-        f"-e OPENCLAW_CONFIG='{config_json}' "
-        f"ghcr.io/openclaw/openclaw:latest "
-        f"openclaw gateway --port 18789"
+        f'docker run -d '
+        f'--name {container_name} '
+        f'--restart unless-stopped '
+        f'-p {port}:18789 '
+        f'-v "{dir_mount}:/home/node/.openclaw" '
+        f'ghcr.io/openclaw/openclaw:latest'
     )
 
+    logger.info("Running Docker command: %s", docker_cmd)
     stdout, stderr, rc = await _run_cmd(docker_cmd)
+    logger.info("Docker result: rc=%d stdout=%s stderr=%s", rc, stdout[:80], stderr[:200])
 
     if rc != 0:
         # Update tenant status to error
@@ -179,7 +251,12 @@ async def restart_container(tenant_id: str, container_id: str) -> bool:
 async def destroy_container(tenant_id: str, container_id: str) -> bool:
     """Stop and remove a tenant container."""
     await _run_cmd(f"docker stop {container_id}")
-    _, stderr, rc = await _run_cmd(f"docker rm {container_id}")
-    if rc == 0:
-        supabase_admin.table("tenants").delete().eq("id", tenant_id).execute()
-    return rc == 0
+    await _run_cmd(f"docker rm {container_id}")
+    # Always delete the Supabase row & config, even if container was already gone
+    supabase_admin.table("tenants").delete().eq("id", tenant_id).execute()
+    # Clean up config directory
+    tenant_dir = _CONFIG_DIR / tenant_id
+    if tenant_dir.exists():
+        import shutil
+        shutil.rmtree(tenant_dir, ignore_errors=True)
+    return True

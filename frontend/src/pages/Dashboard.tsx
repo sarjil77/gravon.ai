@@ -216,11 +216,10 @@ const Dashboard = () => {
     }, deploySteps[0].duration);
 
     try {
-      const res = await fetch(`/api/telegram/`, {
+      const res = await fetch(`/api/telegram/?user_id=${user.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: user.id,
           bot_token: botToken.trim(),
           ai_model: selectedModel,
           channel: "telegram",

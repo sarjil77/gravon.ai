@@ -2,6 +2,7 @@
 API routes for Telegram tenant provisioning and management.
 """
 
+import logging
 from fastapi import APIRouter, HTTPException
 
 from app.database import supabase_admin
@@ -16,6 +17,7 @@ from app.services.tenant_service import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/")
@@ -39,9 +41,12 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
     2. Insert a tenant row
     3. Provision a Docker container running OpenClaw
     """
+    logger.info("create_tenant called: user_id=%s model=%s", user_id, body.ai_model)
+
     # 1 — Validate token
     try:
         bot_info = await validate_telegram_token(body.bot_token)
+        logger.info("Token validated: %s", bot_info.get("username"))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -96,15 +101,19 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
         raise HTTPException(status_code=500, detail="Failed to create tenant record")
 
     tenant = result.data[0]
+    logger.info("Tenant inserted: %s", tenant["id"])
 
     # 3 — Provision container (async)
     try:
+        logger.info("Starting provisioning for tenant %s", tenant["id"])
         container_info = await provision_container(
             tenant_id=tenant["id"],
             bot_token=body.bot_token,
             ai_model=body.ai_model,
             channel=body.channel,
+            api_key=body.api_key,
         )
+        logger.info("Provisioning complete: %s", container_info)
         # Refresh tenant data after provisioning
         refreshed = (
             supabase_admin.table("tenants")
@@ -115,6 +124,7 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
         )
         return refreshed.data
     except RuntimeError as e:
+        logger.error("Provisioning failed: %s", e)
         # Return tenant with error status (already updated by service)
         refreshed = (
             supabase_admin.table("tenants")

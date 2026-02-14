@@ -66,7 +66,15 @@ create policy "Users can view own usage via tenant"
 create policy "Service role can manage usage_logs"
   on public.usage_logs for all with check (true);
 
--- 6. Auto-update updated_at
+-- 6. Auto-update updated_at (create function if missing)
+create or replace function public.handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 create trigger set_tenants_updated_at
   before update on public.tenants
   for each row execute function public.handle_updated_at();
