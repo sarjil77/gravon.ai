@@ -153,7 +153,7 @@ const DeployWizard = () => {
         >
           <div className="inline-flex items-center gap-2 glass-card px-4 py-2 mb-6 text-sm text-muted-foreground">
             <Rocket className="h-4 w-4 text-cyan" />
-            3 steps. Under 60 seconds.
+            3 steps. Zero DevOps.
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-3">
             Deploy your AI bot{" "}

@@ -691,7 +691,7 @@ const Dashboard = () => {
                 Deploy your first AI bot
               </h2>
               <p className="text-muted-foreground text-sm mb-8 max-w-sm mx-auto">
-                Pick a model, paste your Telegram token, and your bot is live in under 60 seconds.
+                Pick a model, paste your Telegram token, and your bot goes live. No servers, no headaches.
               </p>
 
               <button

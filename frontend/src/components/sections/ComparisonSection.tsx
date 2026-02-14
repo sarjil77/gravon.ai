@@ -4,14 +4,14 @@ import { Clock, Zap, Terminal, Key, Server, Download, Settings, Link2, CheckCirc
 // ── Traditional steps (the hard way) ────────────────────────────────────────
 
 const traditionalSteps = [
-  { icon: Server, label: "Purchase a VPS", time: "15 min" },
-  { icon: Key, label: "Create & store SSH keys", time: "10 min" },
-  { icon: Terminal, label: "SSH into the server", time: "5 min" },
-  { icon: Download, label: "Install Node.js & NPM", time: "5 min" },
-  { icon: Download, label: "Install OpenClaw", time: "7 min" },
-  { icon: Settings, label: "Configure openclaw.json", time: "10 min" },
-  { icon: Key, label: "Add AI provider API key", time: "4 min" },
-  { icon: Link2, label: "Pair with Telegram", time: "4 min" },
+  { icon: Server, label: "Rent & configure a cloud VM", time: "20 min" },
+  { icon: Key, label: "Set up SSH keys + security", time: "10 min" },
+  { icon: Terminal, label: "Install runtime & dependencies", time: "8 min" },
+  { icon: Download, label: "Clone & build the AI framework", time: "12 min" },
+  { icon: Settings, label: "Write config files & env vars", time: "10 min" },
+  { icon: Key, label: "Wire up API keys + secrets", time: "5 min" },
+  { icon: Link2, label: "Connect to Telegram + test", time: "10 min" },
+  { icon: Download, label: "Set up monitoring & restarts", time: "15 min" },
 ];
 
 const ComparisonSection = () => {
@@ -25,12 +25,12 @@ const ComparisonSection = () => {
           className="text-center mb-16"
         >
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
-            The old way vs{" "}
-            <span className="text-gradient">the Gravon way</span>
+            Stop wrestling with{" "}
+            <span className="text-gradient">infrastructure</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Setting up an AI bot used to take an hour of terminal commands.
-            We compressed that into three clicks.
+            Deploying an AI bot manually means 90+ minutes of DevOps pain.
+            Gravon handles all of it — you just point and click.
           </p>
         </motion.div>
 
@@ -48,7 +48,7 @@ const ComparisonSection = () => {
               </div>
               <div>
                 <h3 className="font-display text-lg font-bold">Traditional Setup</h3>
-                <p className="text-xs text-muted-foreground">~60 minutes if you know what you're doing</p>
+                <p className="text-xs text-muted-foreground">~90 minutes if you know what you're doing</p>
               </div>
             </div>
 
@@ -71,7 +71,7 @@ const ComparisonSection = () => {
 
             <div className="mt-6 flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
               <span className="text-sm font-medium text-muted-foreground">Total time</span>
-              <span className="font-display text-2xl font-bold text-red-400">60 min</span>
+              <span className="font-display text-2xl font-bold text-red-400">90 min</span>
             </div>
 
             <p className="text-xs text-muted-foreground mt-3 text-center italic">
@@ -92,16 +92,16 @@ const ComparisonSection = () => {
               </div>
               <div>
                 <h3 className="font-display text-lg font-bold">Gravon.ai</h3>
-                <p className="text-xs text-muted-foreground">Under 1 minute, zero technical knowledge</p>
+                <p className="text-xs text-muted-foreground">Three clicks, zero DevOps knowledge needed</p>
               </div>
             </div>
 
             <div className="space-y-4 py-8">
               {/* Three animated steps */}
               {[
-                { num: 1, text: "Pick your AI model", time: "5s" },
-                { num: 2, text: "Choose Telegram", time: "3s" },
-                { num: 3, text: "Paste your bot token & deploy", time: "30s" },
+                { num: 1, text: "Choose your AI brain", time: "10s" },
+                { num: 2, text: "Select Telegram channel", time: "5s" },
+                { num: 3, text: "Paste bot token & hit deploy", time: "~90s" },
               ].map((step, i) => (
                 <motion.div
                   key={step.num}
@@ -134,7 +134,7 @@ const ComparisonSection = () => {
 
             <div className="mt-2 flex items-center justify-between p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
               <span className="text-sm font-medium text-muted-foreground">Total time</span>
-              <span className="font-display text-2xl font-bold text-gradient">&lt;1 min</span>
+              <span className="font-display text-2xl font-bold text-gradient">~2 min</span>
             </div>
 
             <p className="text-xs text-muted-foreground mt-3 text-center">

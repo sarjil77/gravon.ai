@@ -16,13 +16,13 @@ const CTASection = () => {
             <span className="text-gradient">AI assistant?</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            Join thousands of creators and small businesses already using Gravon.ai.
+            50 free credits. No credit card. Deploy your first bot right now.
           </p>
           <Link
             to="/auth"
             className="glow-button-pulse text-base flex items-center gap-2 mx-auto"
           >
-            Start Your 7-Day Free Trial
+            Get Started Free
             <ArrowRight className="h-5 w-5" />
           </Link>
         </motion.div>
