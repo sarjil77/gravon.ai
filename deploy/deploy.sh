@@ -45,18 +45,21 @@ cd "$DEPLOY_DIR"
 docker compose -f docker-compose.prod.yml build --no-cache
 
 echo "→ Starting services..."
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d --force-recreate
 
 # ── 4. Health check ─────────────────────────────────────────
 echo "→ Waiting for backend to be ready..."
-for i in $(seq 1 30); do
+for i in $(seq 1 60); do
     if curl -sf http://localhost/api/health >/dev/null 2>&1; then
-        echo "  ✓ Backend is healthy"
+        echo "  ✓ Backend is healthy (${i}s)"
         break
     fi
-    if [ "$i" -eq 30 ]; then
-        echo "  ✗ Backend did not become healthy in 30s"
-        echo "  Check logs: docker compose -f docker-compose.prod.yml logs backend"
+    if [ "$i" -eq 60 ]; then
+        echo "  ✗ Backend did not become healthy in 60s"
+        echo "  Backend logs:"
+        docker compose -f docker-compose.prod.yml logs backend --tail 20
+        echo "  Nginx logs:"
+        docker compose -f docker-compose.prod.yml logs nginx --tail 20
         exit 1
     fi
     sleep 1
