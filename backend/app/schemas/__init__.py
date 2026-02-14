@@ -129,3 +129,43 @@ class UsageLogResponse(BaseModel):
     msg_count: int
     tokens_used: int
     logged_at: datetime | None = None
+
+
+# ── Credit & Payment Schemas ──────────────────────────────────────────────
+
+class CreditBalanceResponse(BaseModel):
+    balance: int
+    total_purchased: int
+    total_used: int
+
+
+class CreditTransactionResponse(BaseModel):
+    id: str
+    user_id: str
+    amount: int
+    balance_after: int
+    type: str
+    description: str | None = None
+    stripe_session_id: str | None = None
+    tenant_id: str | None = None
+    created_at: datetime | None = None
+
+
+class CreditPackResponse(BaseModel):
+    id: str
+    name: str
+    credits: int
+    price_cents: int
+    price_display: str
+    description: str
+
+
+class CheckoutRequest(BaseModel):
+    pack_id: str = Field(description="Credit pack ID: 'starter', 'pro', or 'business'")
+    success_url: str = Field(default="", description="URL to redirect after successful payment")
+    cancel_url: str = Field(default="", description="URL to redirect on cancel")
+
+
+class CheckoutResponse(BaseModel):
+    checkout_url: str
+    session_id: str

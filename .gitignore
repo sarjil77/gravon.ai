@@ -29,6 +29,11 @@ env/
 whatsapp-service/node_modules/
 whatsapp-service/sessions/
 
+# Deploy artifacts
+deploy/frontend-dist/
+deploy/certbot/
+*.tar.gz
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -25,6 +25,11 @@ import {
   Sparkles,
   BarChart3,
   Clock,
+  CreditCard,
+  Coins,
+  ArrowUpRight,
+  ArrowDownRight,
+  ShoppingCart,
 } from "lucide-react";
 import Navbar from "../components/layout/Navbar";
 import { useAuth } from "../context/AuthContext";
@@ -44,6 +49,30 @@ interface TenantData {
   credits_limit: number;
   plan: string;
   error_message: string | null;
+  created_at: string;
+}
+
+interface CreditBalance {
+  balance: number;
+  total_purchased: number;
+  total_used: number;
+}
+
+interface CreditPack {
+  id: string;
+  name: string;
+  credits: number;
+  price_cents: number;
+  price_display: string;
+  description: string;
+}
+
+interface CreditTransaction {
+  id: string;
+  amount: number;
+  balance_after: number;
+  type: string;
+  description: string | null;
   created_at: string;
 }
 
@@ -135,6 +164,14 @@ const Dashboard = () => {
   // ── Copied token feedback ───────────────────────────────────────────────
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // ── Credits state ───────────────────────────────────────────────────────
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null);
+  const [creditPacks, setCreditPacks] = useState<CreditPack[]>([]);
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [showCreditsPanel, setShowCreditsPanel] = useState(false);
+  const [buyingPack, setBuyingPack] = useState<string | null>(null);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+
   // ── Fetch tenants ───────────────────────────────────────────────────────
 
   const fetchTenants = useCallback(async () => {
@@ -155,6 +192,85 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTenants();
   }, [fetchTenants]);
+
+  // ── Fetch credit balance ────────────────────────────────────────────────
+
+  const fetchCredits = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [balRes, packRes] = await Promise.all([
+        fetch(`/api/credits/balance?user_id=${user.id}`),
+        fetch(`/api/credits/packs`),
+      ]);
+      if (balRes.ok) setCreditBalance(await balRes.json());
+      if (packRes.ok) {
+        const data = await packRes.json();
+        setCreditPacks(data.packs || []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [user]);
+
+  const fetchTransactions = useCallback(async () => {
+    if (!user) return;
+    setLoadingTransactions(true);
+    try {
+      const res = await fetch(`/api/credits/transactions?user_id=${user.id}&limit=20`);
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(data.transactions || []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingTransactions(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
+
+  // ── Buy credits handler ─────────────────────────────────────────────────
+
+  const handleBuyCredits = async (packId: string) => {
+    if (!user) return;
+    setBuyingPack(packId);
+    try {
+      const res = await fetch(
+        `/api/credits/checkout?user_id=${user.id}&pack_id=${packId}&success_url=${encodeURIComponent(window.location.origin + "/dashboard?payment=success")}&cancel_url=${encodeURIComponent(window.location.origin + "/dashboard?payment=cancelled")}`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to start checkout.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setBuyingPack(null);
+    }
+  };
+
+  // ── Handle payment success/cancel URL params ───────────────────────────
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (payment === "success") {
+      fetchCredits();
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+    } else if (payment === "cancelled") {
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [fetchCredits]);
 
   // ── Auto-open wizard if state was passed from homepage ──────────────────
 
@@ -266,6 +382,8 @@ const Dashboard = () => {
   const totalCreditsUsed = tenants.reduce((sum, t) => sum + t.credits_used, 0);
   const hasTenants = tenants.length > 0;
   const showEmptyState = !loadingTenants && !hasTenants && !showWizard;
+  const balance = creditBalance?.balance ?? 0;
+  const lowCredits = balance > 0 && balance <= 10;
 
   // ═════════════════════════════════════════════════════════════════════════
   // ── Render ────────────────────────────────────────────────────────────────
@@ -313,13 +431,36 @@ const Dashboard = () => {
             </div>
 
             {hasTenants && !showWizard && !deploying && (
-              <button
-                onClick={() => { setShowWizard(true); setWizardStep(0); setDeployError(null); }}
-                className="glow-button text-sm px-5 py-2.5 flex items-center gap-2 shrink-0"
-              >
-                <Plus className="h-4 w-4" />
-                Deploy New Bot
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => { setShowCreditsPanel(!showCreditsPanel); if (!showCreditsPanel) fetchTransactions(); }}
+                  className={`text-sm px-4 py-2.5 flex items-center gap-2 rounded-xl border transition-all ${
+                    showCreditsPanel
+                      ? "bg-cyan/10 border-cyan/30 text-cyan"
+                      : "border-border hover:border-cyan/30 hover:bg-cyan/5 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Credits
+                  {balance > 0 && (
+                    <span className={`text-xs font-mono px-1.5 py-0.5 rounded-md ${
+                      lowCredits ? "bg-yellow-500/10 text-yellow-400" : "bg-cyan/10 text-cyan"
+                    }`}>
+                      {balance}
+                    </span>
+                  )}
+                  {balance === 0 && (
+                    <span className="text-xs font-mono px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-400">0</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setShowWizard(true); setWizardStep(0); setDeployError(null); }}
+                  className="glow-button text-sm px-5 py-2.5 flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Deploy New Bot
+                </button>
+              </div>
             )}
           </motion.div>
         )}
@@ -334,8 +475,13 @@ const Dashboard = () => {
           >
             {[
               { label: "Active Bots", value: runningCount.toString(), icon: Zap, accent: "text-emerald-400" },
-              { label: "Total Messages", value: totalCreditsUsed.toLocaleString(), icon: BarChart3, accent: "text-cyan" },
-              { label: "Avg Deploy", value: "47s", icon: Clock, accent: "text-purple" },
+              {
+                label: "Credit Balance",
+                value: balance.toLocaleString(),
+                icon: Coins,
+                accent: balance === 0 ? "text-red-400" : lowCredits ? "text-yellow-400" : "text-cyan",
+              },
+              { label: "Total Messages", value: (creditBalance?.total_used ?? totalCreditsUsed).toLocaleString(), icon: BarChart3, accent: "text-purple" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -351,6 +497,169 @@ const Dashboard = () => {
             ))}
           </motion.div>
         )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* ── Credits Panel ─────────────────────────────────────────────  */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {showCreditsPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden mb-8"
+            >
+              <div className="glass-card p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan/20 to-purple/20 flex items-center justify-center">
+                      <Coins className="h-4 w-4 text-cyan" />
+                    </div>
+                    <div>
+                      <h2 className="font-display text-lg font-semibold">Credits</h2>
+                      <p className="text-xs text-muted-foreground">
+                        Current balance: <span className={`font-mono font-bold ${balance === 0 ? "text-red-400" : "text-cyan"}`}>{balance}</span> credits
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowCreditsPanel(false)}
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* Low credits warning */}
+                {(balance === 0 || lowCredits) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex items-start gap-2 p-3 rounded-xl border text-sm mb-6 ${
+                      balance === 0
+                        ? "bg-red-500/10 border-red-500/20 text-red-400"
+                        : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"
+                    }`}
+                  >
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>
+                      {balance === 0
+                        ? "No credits remaining. Purchase a pack below to continue using your bots."
+                        : `Only ${balance} credits left. Consider topping up to avoid interruptions.`}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Credit cost info */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    { model: "Claude", cost: "2 credits/msg", color: "text-orange-400" },
+                    { model: "GPT-4o", cost: "1 credit/msg", color: "text-emerald-400" },
+                    { model: "Gemini", cost: "1 credit/msg", color: "text-blue-400" },
+                  ].map((item) => (
+                    <div key={item.model} className="text-center p-3 rounded-xl bg-muted/10 border border-border/50">
+                      <p className={`text-sm font-semibold ${item.color}`}>{item.model}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.cost}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Credit packs */}
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-cyan" />
+                  Buy Credits
+                </h3>
+                <div className="grid gap-3 md:grid-cols-3 mb-6">
+                  {creditPacks.map((pack, i) => (
+                    <motion.div
+                      key={pack.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`relative p-4 rounded-xl border transition-all hover:border-cyan/30 hover:bg-cyan/5 ${
+                        pack.id === "pro" ? "border-cyan/30 bg-cyan/5 ring-1 ring-cyan/20" : "border-border"
+                      }`}
+                    >
+                      {pack.id === "pro" && (
+                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2.5 py-0.5 bg-cyan text-black rounded-full">
+                          BEST VALUE
+                        </span>
+                      )}
+                      <p className="font-display font-bold text-lg">{pack.price_display}</p>
+                      <p className="text-sm text-muted-foreground">{pack.credits.toLocaleString()} credits</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">{pack.description}</p>
+                      <button
+                        onClick={() => handleBuyCredits(pack.id)}
+                        disabled={buyingPack !== null}
+                        className={`mt-3 w-full text-xs font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                          pack.id === "pro"
+                            ? "bg-cyan/20 text-cyan hover:bg-cyan/30 border border-cyan/30"
+                            : "bg-muted/20 text-foreground hover:bg-muted/30 border border-border"
+                        } disabled:opacity-50`}
+                      >
+                        {buyingPack === pack.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <CreditCard className="h-3.5 w-3.5" />
+                        )}
+                        {buyingPack === pack.id ? "Redirecting…" : "Buy Now"}
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Transaction history */}
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-purple" />
+                  Recent Transactions
+                </h3>
+                {loadingTransactions ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : transactions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No transactions yet.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {transactions.map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            tx.amount > 0
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : "bg-orange-500/10 text-orange-400"
+                          }`}>
+                            {tx.amount > 0
+                              ? <ArrowDownRight className="h-3.5 w-3.5" />
+                              : <ArrowUpRight className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm truncate">{tx.description || tx.type}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {new Date(tx.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 ml-3">
+                          <p className={`text-sm font-mono font-semibold ${
+                            tx.amount > 0 ? "text-emerald-400" : "text-orange-400"
+                          }`}>
+                            {tx.amount > 0 ? "+" : ""}{tx.amount}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">bal: {tx.balance_after}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Loading state ────────────────────────────────────────────── */}
         {loadingTenants && (
@@ -395,7 +704,7 @@ const Dashboard = () => {
 
               <div className="flex items-center justify-center gap-6 mt-8 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-400" /> Free 100 messages
+                  <Check className="h-3.5 w-3.5 text-emerald-400" /> 50 free credits
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-400" /> No credit card

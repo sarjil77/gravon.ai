@@ -15,6 +15,7 @@ from app.services.tenant_service import (
     restart_container,
     destroy_container,
 )
+from app.services.credit_service import get_balance, get_credit_cost, has_enough_credits
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -42,6 +43,21 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
     3. Provision a Docker container running OpenClaw
     """
     logger.info("create_tenant called: user_id=%s model=%s", user_id, body.ai_model)
+
+    # 0 — Check credit balance before deploying
+    try:
+        balance = get_balance(user_id)
+        cost_per_msg = get_credit_cost(body.ai_model)
+        if balance["balance"] < cost_per_msg:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Insufficient credits ({balance['balance']} remaining). "
+                       f"Purchase more credits to deploy a bot.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("Credit check failed (allowing deploy): %s", e)
 
     # 1 — Validate token
     try:
@@ -82,7 +98,11 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
     # Map user plan to tenant plan
     plan_map = {"free": "free_trial", "starter": "starter", "pro": "pro", "agency": "agency"}
     tenant_plan = plan_map.get(user_plan, "free_trial")
-    credits_map = {"free_trial": 100, "starter": 999999, "pro": 999999, "agency": 999999}
+
+    # Credits are now managed in credit_balances table, but keep credits_limit
+    # on tenant for backward compat. Show the user's current balance.
+    user_balance = get_balance(user_id)
+    credits_limit = user_balance["balance"]
 
     # 2 — Insert tenant row
     insert_data = {
@@ -93,7 +113,7 @@ async def create_tenant(user_id: str, body: TenantCreateRequest):
         "channel": body.channel,
         "status": "provisioning",
         "plan": tenant_plan,
-        "credits_limit": credits_map.get(tenant_plan, 100),
+        "credits_limit": credits_limit,
     }
     result = supabase_admin.table("tenants").insert(insert_data).execute()
 
