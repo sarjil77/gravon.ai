@@ -73,7 +73,7 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
         "channels": {},
         "gateway": {
             "port": 18789,
-            "bind": "lan",
+            "bind": "auto",
             "auth": {
                 "mode": "token",
                 "token": gw_token,
@@ -226,6 +226,11 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
     config_path = tenant_dir / "openclaw.json"
     config_path.write_text(config_json, encoding="utf-8")
 
+    # Ensure the directory is writable by the container's node user (UID 1000)
+    import os
+    os.chmod(tenant_dir, 0o755)
+    os.chmod(config_path, 0o644)
+
     # Convert to Docker-compatible path (forward slashes)
     dir_mount = str(tenant_dir).replace("\\", "/")
 
@@ -236,6 +241,7 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
         f'docker run -d '
         f'--name {container_name} '
         f'--restart unless-stopped '
+        f'--user 1000:1000 '
         f'-p {port}:18789 '
         f'-v "{dir_mount}:/home/node/.openclaw" '
         f'ghcr.io/openclaw/openclaw:latest'
