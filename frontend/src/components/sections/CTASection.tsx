@@ -4,26 +4,28 @@ import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
-    <section className="relative py-24 px-4">
-      <div className="max-w-3xl mx-auto text-center">
+    <section className="py-32 px-6">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="border-t border-border/30 mb-20" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          className="text-center max-w-2xl mx-auto"
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
-            Ready to launch your{" "}
-            <span className="text-gradient">AI assistant?</span>
+          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-5">
+            Ready to deploy your AI bot?
           </h2>
-          <p className="text-muted-foreground text-lg mb-8">
-            50 free credits. No credit card. Deploy your first bot right now.
+          <p className="text-muted-foreground text-lg mb-10">
+            50 free credits. No credit card required. Your first bot can be live
+            in under 2 minutes.
           </p>
           <Link
             to="/auth"
-            className="glow-button-pulse text-base flex items-center gap-2 mx-auto"
+            className="btn-primary text-base inline-flex items-center gap-2"
           >
             Get Started Free
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </motion.div>
       </div>

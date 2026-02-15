@@ -1,75 +1,129 @@
 import { motion } from "framer-motion";
-import { Shield, Zap, Bot, BarChart3, RefreshCw, Lock } from "lucide-react";
+import { Zap, Shield, RefreshCw } from "lucide-react";
 
 const features = [
   {
     icon: Zap,
-    title: "Three-Click Deploy",
-    description: "Choose a model, pick Telegram, paste your token. Your bot is live in under 2 minutes — no terminal needed.",
-  },
-  {
-    icon: Bot,
-    title: "Pick Your AI Brain",
-    description: "Claude, GPT-4o, or Gemini Flash — each optimized for different strengths. Swap models anytime from your dashboard.",
-  },
-  {
-    icon: BarChart3,
-    title: "Live Dashboard",
-    description: "Monitor credits, message volume, and bot status in real-time. Know exactly what your bot is doing.",
+    title: "Three-click deploy",
+    description:
+      "Choose a model, paste your Telegram token, and deploy. Your AI bot is live in under 2 minutes — no terminal, no config files, no DevOps.",
+    visual: (
+      <div className="rounded-lg bg-[#0A0A0A] border border-border/40 p-5 space-y-3">
+        {["Claude Sonnet 4", "GPT-4o", "Gemini Flash"].map((model, i) => (
+          <div
+            key={model}
+            className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm transition-all ${
+              i === 0
+                ? "bg-primary/10 border border-primary/20 text-foreground"
+                : "border border-border/30 text-muted-foreground"
+            }`}
+          >
+            <div className={`w-2 h-2 rounded-full ${i === 0 ? "bg-primary" : "bg-[#333]"}`} />
+            {model}
+            {i === 0 && <span className="ml-auto text-xs text-primary">Selected</span>}
+          </div>
+        ))}
+      </div>
+    ),
   },
   {
     icon: Shield,
-    title: "Zero DevOps",
-    description: "No VPS, no Docker, no SSH. We provision and manage isolated containers for each bot automatically.",
+    title: "Isolated & secure",
+    description:
+      "Each bot runs in its own container with dedicated resources. Your API keys are encrypted at rest and never touch shared storage. Full tenant isolation.",
+    visual: (
+      <div className="rounded-lg bg-[#0A0A0A] border border-border/40 p-5 font-mono text-xs space-y-2">
+        <div className="text-muted-foreground">
+          <span className="text-emerald-400">$</span> docker ps
+        </div>
+        <div className="text-muted-foreground/70 leading-relaxed">
+          <div>CONTAINER ID &nbsp; STATUS &nbsp;&nbsp;&nbsp; NAMES</div>
+          <div>a1b2c3d4 &nbsp;&nbsp;&nbsp;&nbsp; Up 3h &nbsp;&nbsp;&nbsp; gravon-tenant-a1b2</div>
+          <div>e5f6g7h8 &nbsp;&nbsp;&nbsp;&nbsp; Up 12h &nbsp;&nbsp; gravon-tenant-e5f6</div>
+          <div>i9j0k1l2 &nbsp;&nbsp;&nbsp;&nbsp; Up 42h &nbsp;&nbsp; gravon-tenant-i9j0</div>
+        </div>
+        <div className="pt-1 text-emerald-400/70">3 containers running · 0 issues</div>
+      </div>
+    ),
   },
   {
     icon: RefreshCw,
-    title: "Self-Healing Bots",
-    description: "Auto-restart on crash, health checks every 30 seconds. Your bot recovers before users even notice.",
-  },
-  {
-    icon: Lock,
-    title: "Isolated & Secure",
-    description: "Each bot runs in its own container with dedicated resources. Your API keys never touch shared storage.",
+    title: "Self-healing bots",
+    description:
+      "Auto-restart on crash. Health checks every 30 seconds. Your bot recovers before users even notice — with full uptime monitoring in your dashboard.",
+    visual: (
+      <div className="rounded-lg bg-[#0A0A0A] border border-border/40 p-5 space-y-3">
+        {[
+          { time: "14:32:01", event: "Health check passed", status: "ok" },
+          { time: "14:32:31", event: "Health check passed", status: "ok" },
+          { time: "14:33:01", event: "Process exited (OOM)", status: "error" },
+          { time: "14:33:02", event: "Container restarting...", status: "warn" },
+          { time: "14:33:04", event: "Bot back online", status: "ok" },
+        ].map((log) => (
+          <div key={log.time + log.event} className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-muted-foreground/50">{log.time}</span>
+            <div
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                log.status === "ok"
+                  ? "bg-emerald-500"
+                  : log.status === "error"
+                  ? "bg-red-400"
+                  : "bg-yellow-400"
+              }`}
+            />
+            <span className="text-muted-foreground">{log.event}</span>
+          </div>
+        ))}
+      </div>
+    ),
   },
 ];
 
 const FeaturesSection = () => {
   return (
-    <section id="features" className="relative py-24 px-4">
-      <div className="max-w-6xl mx-auto">
+    <section id="features" className="py-32 px-6">
+      <div className="max-w-[1200px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
-            Built different,{" "}
-            <span className="text-gradient">on purpose</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Every feature exists because deploying AI bots shouldn't require an engineering degree.
+          <p className="text-sm text-muted-foreground mb-4 tracking-wide uppercase">
+            Platform
           </p>
+          <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight">
+            Built for reliability
+          </h2>
         </motion.div>
 
-        <div className="bento-grid md:grid-cols-3">
+        <div className="space-y-24">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card-hover p-6 md:p-8"
+              transition={{ duration: 0.6 }}
+              className={`grid md:grid-cols-2 gap-12 md:gap-16 items-center ${
+                i % 2 === 1 ? "md:direction-rtl" : ""
+              }`}
             >
-              <div className="mb-4 inline-flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10">
-                <feature.icon className="h-6 w-6 text-primary" />
+              {/* Text */}
+              <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                <feature.icon className="h-5 w-5 text-primary mb-5" />
+                <h3 className="font-display text-2xl md:text-3xl font-bold tracking-tight mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="font-display text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {feature.description}
-              </p>
+
+              {/* Visual */}
+              <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                {feature.visual}
+              </div>
             </motion.div>
           ))}
         </div>
