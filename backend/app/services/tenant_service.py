@@ -27,8 +27,15 @@ _MODEL_MAP: dict[str, str] = {
 }
 
 # Directory to store per-tenant OpenClaw configs
-_CONFIG_DIR = Path(tempfile.gettempdir()) / "gravon_configs"
-_CONFIG_DIR.mkdir(exist_ok=True)
+# On production (Linux), use a fixed host path that both the backend container
+# and the tenant containers can access via the same path.
+# On Windows (local dev), use a temp directory.
+import platform
+if platform.system() == "Linux":
+    _CONFIG_DIR = Path("/opt/gravon/configs")
+else:
+    _CONFIG_DIR = Path(tempfile.gettempdir()) / "gravon_configs"
+_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ── Telegram Bot Token Validation ────────────────────────────────────────────
@@ -227,11 +234,14 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
     config_path.write_text(config_json, encoding="utf-8")
 
     # Ensure the directory is writable by the container's node user (UID 1000)
-    import os
-    os.chmod(tenant_dir, 0o755)
-    os.chmod(config_path, 0o644)
+    import platform
+    if platform.system() == "Linux":
+        # chown to node user so OpenClaw container can read AND write
+        await _run_cmd(f'chown -R 1000:1000 "{tenant_dir}"')
 
-    # Convert to Docker-compatible path (forward slashes)
+    # The mount path must be the SAME path on the host filesystem.
+    # In production, both backend and tenant containers see /opt/gravon/configs via bind mount.
+    # On Windows (local dev), we use the temp dir path directly.
     dir_mount = str(tenant_dir).replace("\\", "/")
 
     # Build the docker run command
@@ -241,7 +251,6 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
         f'docker run -d '
         f'--name {container_name} '
         f'--restart unless-stopped '
-        f'--user 1000:1000 '
         f'-p {port}:18789 '
         f'-v "{dir_mount}:/home/node/.openclaw" '
         f'ghcr.io/openclaw/openclaw:latest'
