@@ -144,8 +144,23 @@ async def _run_cmd(cmd: str) -> tuple[str, str, int]:
     return await loop.run_in_executor(None, _run_cmd_sync, cmd)
 
 
+def _get_docker_used_ports_sync() -> set[int]:
+    """Get all host ports currently mapped by Docker containers."""
+    import re
+    result = subprocess.run(
+        'docker ps --format "{{.Ports}}"',
+        shell=True, capture_output=True, text=True, timeout=10,
+    )
+    if result.returncode != 0:
+        return set()
+    ports = set()
+    for match in re.finditer(r'0\.0\.0\.0:(\d+)->', result.stdout):
+        ports.add(int(match.group(1)))
+    return ports
+
+
 async def _next_port() -> int:
-    """Find the next available port by checking existing tenants."""
+    """Find the next available port by checking existing tenants AND Docker."""
     result = (
         supabase_admin.table("tenants")
         .select("container_port")
@@ -154,9 +169,34 @@ async def _next_port() -> int:
         .limit(1)
         .execute()
     )
+    candidate = _PORT_COUNTER_START
     if result.data and result.data[0].get("container_port"):
-        return result.data[0]["container_port"] + 1
-    return _PORT_COUNTER_START
+        candidate = result.data[0]["container_port"] + 1
+
+    # Ask Docker which host ports are actually bound right now
+    loop = asyncio.get_event_loop()
+    docker_ports = await loop.run_in_executor(None, _get_docker_used_ports_sync)
+    logger.info("Docker occupied ports: %s, candidate: %d", docker_ports, candidate)
+
+    # Scan up to 50 ports to find one not used by Docker
+    for offset in range(50):
+        port = candidate + offset
+        if port not in docker_ports:
+            logger.info("Selected free port: %d", port)
+            return port
+
+    # Fallback
+    return candidate
+
+
+async def _cleanup_existing_container(container_name: str) -> None:
+    """Remove any existing container with the same name (stopped or running)."""
+    # Check if container exists
+    stdout, _, rc = await _run_cmd(f"docker inspect {container_name}")
+    if rc == 0:
+        logger.info("Removing existing container %s before re-provisioning", container_name)
+        await _run_cmd(f"docker stop {container_name}")
+        await _run_cmd(f"docker rm -f {container_name}")
 
 
 async def provision_container(tenant_id: str, bot_token: str, ai_model: str, channel: str, api_key: str | None = None) -> dict:
@@ -168,6 +208,17 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
     config_json = generate_openclaw_config(bot_token, ai_model, channel, api_key=api_key)
 
     container_name = f"gravon-tenant-{tenant_id[:8]}"
+
+    # Clean up any leftover container with the same name (from a failed prior run)
+    await _cleanup_existing_container(container_name)
+
+    # Delete any stale Telegram webhook so OpenClaw polling works immediately
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            await client.post(f"https://api.telegram.org/bot{bot_token}/deleteWebhook")
+            logger.info("Deleted Telegram webhook for clean polling start")
+    except Exception as e:
+        logger.warning("Could not delete Telegram webhook: %s", e)
 
     # Write config to a per-tenant directory (OpenClaw needs write access beside the config)
     tenant_dir = _CONFIG_DIR / tenant_id
