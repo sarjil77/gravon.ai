@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     stripe_publishable_key: str = ""
     stripe_webhook_secret: str = ""
 
+    # Gmail OAuth (Google Cloud Console)
+    gmail_client_id: str = ""
+    gmail_client_secret: str = ""
+    gmail_redirect_uri: str = "http://localhost:8000/api/gmail/callback"
+    gcp_project_id: str = ""
+    gmail_pubsub_topic: str = ""  # e.g. projects/<project>/topics/gravon-gmail-watch
+
     model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8", "extra": "ignore"}
 
 

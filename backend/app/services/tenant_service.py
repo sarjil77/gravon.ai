@@ -121,6 +121,35 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
             "allowFrom": ["*"],
         }
 
+    # Enable Gmail hooks support.
+    # When channel is "gmail", the Telegram channel is still needed for delivering
+    # AI-generated email summaries/alerts to the user's Telegram bot.
+    # When channel is "telegram", we also enable hooks so Gmail can be added later.
+    hook_token = secrets.token_hex(16)
+    config["hooks"] = {
+        "enabled": True,
+        "token": hook_token,
+        "path": "/hooks",
+        "presets": ["gmail"],
+        "mappings": [
+            {
+                "match": {"path": "gmail"},
+                "action": "agent",
+                "wakeMode": "now",
+                "name": "Gmail",
+                "sessionKey": "hook:gmail:{{messages[0].id}}",
+                "messageTemplate": (
+                    "New email from {{messages[0].from}}\n"
+                    "Subject: {{messages[0].subject}}\n"
+                    "{{messages[0].snippet}}\n"
+                    "{{messages[0].body}}"
+                ),
+                "deliver": True,
+                "channel": "telegram" if channel == "telegram" or bot_token else "last",
+            },
+        ],
+    }
+
     return json.dumps(config, indent=2)
 
 

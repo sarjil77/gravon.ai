@@ -32,6 +32,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import Navbar from "../components/layout/Navbar";
+import GmailSection from "../components/sections/GmailSection";
 import { useAuth } from "../context/AuthContext";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -1169,6 +1170,14 @@ const Dashboard = () => {
             </div>
           </motion.div>
         )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* ── Gmail Integration ─────────────────────────────────────────  */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {user && hasTenants && !deploying && !showWizard && (
+          <GmailSection userId={user.id} tenants={tenants} />
+        )}
+
       </main>
     </div>
   );
