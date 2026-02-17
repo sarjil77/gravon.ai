@@ -276,10 +276,13 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
     # Build the docker run command
     # Mount the config directory to ~/.openclaw (default path OpenClaw looks at)
     # This lets OpenClaw read AND write (doctor auto-fix, sessions, etc.)
+    # Include DNS and host networking so OpenClaw can reach external APIs (Telegram, etc.)
     docker_cmd = (
         f'docker run -d '
         f'--name {container_name} '
         f'--restart unless-stopped '
+        f'--dns 8.8.8.8 --dns 8.8.4.4 '
+        f'--add-host host.docker.internal:host-gateway '
         f'-p {port}:18789 '
         f'-v "{dir_mount}:/home/node/.openclaw" '
         f'ghcr.io/openclaw/openclaw:latest'
