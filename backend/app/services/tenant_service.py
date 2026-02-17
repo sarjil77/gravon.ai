@@ -281,6 +281,7 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
         f'docker run -d '
         f'--name {container_name} '
         f'--restart unless-stopped '
+        f'--network gravon '
         f'--dns 8.8.8.8 --dns 8.8.4.4 '
         f'--add-host host.docker.internal:host-gateway '
         f'-p {port}:18789 '

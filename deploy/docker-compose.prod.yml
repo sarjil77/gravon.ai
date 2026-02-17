@@ -52,4 +52,5 @@ services:
 
 networks:
   gravon:
+    name: gravon
     driver: bridge

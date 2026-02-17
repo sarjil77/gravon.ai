@@ -419,9 +419,9 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
     }
 
     # Use the container name to reach tenant via Docker's internal DNS.
-    # In production (Docker network), reach by container name on internal port 18789.
-    # Container naming pattern: gravon-tenant-<container_id_prefix>
-    container_name = f"gravon-tenant-{container_id[:12]}"
+    # Both backend and tenant must be on the same Docker network ("gravon").
+    # Container naming pattern in tenant_service.py: gravon-tenant-<tenant_id[:8]>
+    container_name = f"gravon-tenant-{tenant_id[:8]}"
     hook_url = f"http://{container_name}:18789/hooks/gmail"
     try:
         async with httpx.AsyncClient(timeout=30) as client:
