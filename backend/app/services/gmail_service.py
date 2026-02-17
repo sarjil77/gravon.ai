@@ -361,10 +361,10 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
     Forward emails to the tenant's OpenClaw container via /hooks/gmail endpoint.
     The OpenClaw container must have hooks enabled with gmail preset.
     """
-    # Look up the tenant's container port and hook token
+    # Look up the tenant's container_id and status
     tenant = (
         supabase_admin.table("tenants")
-        .select("container_port, status")
+        .select("container_id, status")
         .eq("id", tenant_id)
         .single()
         .execute()
@@ -373,7 +373,11 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
         logger.warning("Tenant %s not running, cannot forward emails", tenant_id)
         return False
 
-    port = tenant.data["container_port"]
+    container_id = tenant.data["container_id"]
+    if not container_id:
+        logger.error("No container_id for tenant %s", tenant_id)
+        return False
+
     # Read hooks token from the OpenClaw config
     from pathlib import Path
     import json
@@ -414,11 +418,11 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
         ],
     }
 
-    # Use host.docker.internal to reach tenant containers mapped to host ports.
-    # Falls back to localhost for local dev (non-Docker).
-    import platform
-    host = "host.docker.internal" if platform.system() == "Linux" else "localhost"
-    hook_url = f"http://{host}:{port}/hooks/gmail"
+    # Use the container name to reach tenant via Docker's internal DNS.
+    # In production (Docker network), reach by container name on internal port 18789.
+    # Container naming pattern: gravon-tenant-<container_id_prefix>
+    container_name = f"gravon-tenant-{container_id[:12]}"
+    hook_url = f"http://{container_name}:18789/hooks/gmail"
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
@@ -427,8 +431,8 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
                 headers={"Authorization": f"Bearer {hook_token}"},
             )
             logger.info(
-                "Forwarded %d emails to OpenClaw (%s:%d): %d %s",
-                len(emails), host, port, resp.status_code, resp.text[:200],
+                "Forwarded %d emails to OpenClaw (%s): %d %s",
+                len(emails), container_name, resp.status_code, resp.text[:200],
             )
             return resp.status_code in (200, 202)
     except Exception as e:

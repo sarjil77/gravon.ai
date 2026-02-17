@@ -145,6 +145,33 @@ const GmailSection = ({ userId, tenants }: GmailSectionProps) => {
     }
   }, [fetchConnections]);
 
+  // ── Auto-refresh connections and history every 5 seconds ───────────────
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchConnections();
+      // If history panel is open, also refresh it
+      if (historyConnId) {
+        const fetchHistoryRefresh = async () => {
+          try {
+            const res = await fetch(
+              `/api/gmail/connections/${historyConnId}/history?user_id=${userId}&limit=20`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              setProcessedMessages(data.messages || []);
+            }
+          } catch {
+            // ignore
+          }
+        };
+        fetchHistoryRefresh();
+      }
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [userId, historyConnId, fetchConnections]);
+
   // ── Connect Gmail ─────────────────────────────────────────────────────
 
   const handleConnect = async () => {
