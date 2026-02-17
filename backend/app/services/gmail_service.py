@@ -414,7 +414,11 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
         ],
     }
 
-    hook_url = f"http://localhost:{port}/hooks/gmail"
+    # Use host.docker.internal to reach tenant containers mapped to host ports.
+    # Falls back to localhost for local dev (non-Docker).
+    import platform
+    host = "host.docker.internal" if platform.system() == "Linux" else "localhost"
+    hook_url = f"http://{host}:{port}/hooks/gmail"
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
@@ -423,12 +427,12 @@ async def forward_to_openclaw(tenant_id: str, emails: list[dict]) -> bool:
                 headers={"Authorization": f"Bearer {hook_token}"},
             )
             logger.info(
-                "Forwarded %d emails to OpenClaw (port %d): %d %s",
-                len(emails), port, resp.status_code, resp.text[:200],
+                "Forwarded %d emails to OpenClaw (%s:%d): %d %s",
+                len(emails), host, port, resp.status_code, resp.text[:200],
             )
             return resp.status_code in (200, 202)
     except Exception as e:
-        logger.error("Failed to forward to OpenClaw: %s", e)
+        logger.error("Failed to forward to OpenClaw (%s): %s", hook_url, e)
         return False
 
 
