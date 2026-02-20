@@ -80,7 +80,7 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
         "channels": {},
         "gateway": {
             "port": 18789,
-            "bind": "auto",
+            "bind": "lan",
             "auth": {
                 "mode": "token",
                 "token": gw_token,
