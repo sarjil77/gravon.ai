@@ -24,7 +24,7 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-7"
           >
-            Deploy AI bots
+            Deploy AI Agents
             <br />
             <span className="text-accent-gradient">in 2 minutes.</span>
           </motion.h1>
