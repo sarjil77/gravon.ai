@@ -15,7 +15,7 @@ const useCases = [
   {
     icon: Code2,
     title: "Developer Tools",
-    description: "Build internal bots for CI/CD notifications, code reviews, and team standups.",
+    description: "Build internal Agents for CI/CD notifications, code reviews, and team standups.",
   },
   {
     icon: Users,
@@ -51,7 +51,7 @@ const UseCasesSection = () => {
             One platform, endless possibilities
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Deploy AI bots for any department, any workflow, any use case.
+            Deploy AI Agents for any department, any workflow, any use case.
           </p>
         </motion.div>
 

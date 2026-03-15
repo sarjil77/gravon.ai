@@ -42,7 +42,7 @@ const plans = [
     credits: "2,000 credits",
     features: [
       "2,000 credits",
-      "3 Telegram bots",
+      "3 Telegram Agents",
       "All AI models",
       "Priority support",
       "Advanced analytics",
@@ -59,7 +59,7 @@ const plans = [
     credits: "6,000 credits",
     features: [
       "6,000 credits",
-      "10 Telegram bots",
+      "10 Telegram Agents",
       "All AI models",
       "Dedicated support",
       "API access",

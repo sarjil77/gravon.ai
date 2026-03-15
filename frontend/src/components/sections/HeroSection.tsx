@@ -98,7 +98,7 @@ const HeroSection = () => {
             <div className="p-6 md:p-10">
               <div className="grid grid-cols-3 gap-4 mb-6">
                 {[
-                  { label: "Active Bots", value: "3" },
+                  { label: "Active Agents", value: "3" },
                   { label: "Messages Today", value: "1,247" },
                   { label: "Credits Left", value: "4,820" },
                 ].map((stat) => (

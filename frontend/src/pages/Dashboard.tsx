@@ -475,7 +475,7 @@ const Dashboard = () => {
             className="grid grid-cols-3 gap-4 mb-8"
           >
             {[
-              { label: "Active Bots", value: runningCount.toString(), icon: Zap, accent: "text-emerald-400" },
+              { label: "Active Agents", value: runningCount.toString(), icon: Zap, accent: "text-emerald-400" },
               {
                 label: "Credit Balance",
                 value: balance.toLocaleString(),
@@ -546,7 +546,7 @@ const Dashboard = () => {
                     <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                     <span>
                       {balance === 0
-                        ? "No credits remaining. Purchase a pack below to continue using your bots."
+                        ? "No credits remaining. Purchase a pack below to continue using your Agents."
                         : `Only ${balance} credits left. Consider topping up to avoid interruptions.`}
                     </span>
                   </motion.div>
@@ -1031,7 +1031,7 @@ const Dashboard = () => {
           >
             <div className="flex items-center gap-3 mb-4">
               <Send className="h-5 w-5 text-sky-400" />
-              <h2 className="font-display text-lg font-semibold">Your Bots</h2>
+              <h2 className="font-display text-lg font-semibold">Your Agents</h2>
               <span className="text-xs text-muted-foreground">
                 {runningCount} of {tenants.length} running
               </span>

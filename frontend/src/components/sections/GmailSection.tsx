@@ -713,7 +713,7 @@ const GmailSection = ({ userId, tenants }: GmailSectionProps) => {
                                 {runningTenants.length === 0 ? (
                                   <p className="text-xs text-yellow-400 flex items-center gap-1.5">
                                     <AlertCircle className="h-3.5 w-3.5" />
-                                    No running bots. Deploy a bot first, then link
+                                    No running Agent. Deploy a bot first, then link
                                     it here.
                                   </p>
                                 ) : (

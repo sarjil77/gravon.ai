@@ -31,7 +31,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[220px]">
-              Deploy AI-powered Telegram bots in under 2 minutes. Zero DevOps required.
+              Deploy AI Telegram Agents in under 2 minutes. Zero DevOps required.
             </p>
           </div>
 

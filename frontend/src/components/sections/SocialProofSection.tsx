@@ -25,7 +25,7 @@ const reasons = [
     icon: Clock,
     title: "Pay As You Go",
     description:
-      "No monthly subscriptions. Buy credit packs and only pay for what your bots actually use.",
+      "No monthly subscriptions. Buy credit packs and only pay for what your Agents actually use.",
   },
   {
     icon: Code2,
