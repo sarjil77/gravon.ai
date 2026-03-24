@@ -22,7 +22,6 @@ def test_list_bots(client):
     assert response.status_code == 200
 
 
-def test_whatsapp_status(client):
-    response = client.get("/api/whatsapp/status")
-    assert response.status_code == 200
-    assert response.json()["connected"] is False
+def test_list_telegram_requires_user_id(client):
+    response = client.get("/api/telegram/")
+    assert response.status_code == 422

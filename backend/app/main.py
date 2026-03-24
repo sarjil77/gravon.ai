@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import auth, bots, whatsapp, telegram, credits
+from app.routes import auth, bots, telegram, credits
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Gravon AI",
-    description="AI-powered bot platform with Telegram, WhatsApp & more",
+    description="AI-powered bot platform with Telegram",
     version="0.2.0",
     lifespan=lifespan,
 )
@@ -33,7 +33,6 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(bots.router, prefix="/api/bots", tags=["Bots"])
-app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["WhatsApp"])
 app.include_router(telegram.router, prefix="/api/telegram", tags=["Telegram"])
 app.include_router(credits.router, prefix="/api/credits", tags=["Credits & Payments"])
 

@@ -22,7 +22,7 @@ class BotCreateRequest(BaseModel):
     description: str = ""
     ai_provider: str = Field(default="openai", pattern="^(openai|anthropic|gemini)$")
     ai_model: str = "gpt-4o"
-    system_prompt: str = "You are a helpful AI assistant for WhatsApp. Keep responses concise and friendly."
+    system_prompt: str = "You are a helpful AI assistant. Keep responses concise and friendly."
 
 
 class BotUpdateRequest(BaseModel):
@@ -45,25 +45,6 @@ class BotResponse(BaseModel):
     is_active: bool
     created_at: datetime | None = None
     updated_at: datetime | None = None
-
-
-# ── WhatsApp Schemas ───────────────────────────────────────────────────────
-
-class WhatsAppStatusResponse(BaseModel):
-    connected: bool
-    connecting: bool = False
-    phone: str | None = None
-
-
-class IncomingMessagePayload(BaseModel):
-    userId: str
-    from_: str = Field(alias="from")
-    pushName: str = ""
-    text: str
-    messageId: str | None = None
-    timestamp: int | None = None
-
-    model_config = {"populate_by_name": True}
 
 
 # ── Response Schemas (what the backend returns) ────────────────────────────
@@ -96,7 +77,7 @@ class TenantCreateRequest(BaseModel):
         description="AI model identifier",
     )
     api_key: str | None = Field(default=None, description="User-supplied AI provider API key (overrides server default)")
-    channel: str = Field(default="telegram", pattern="^(telegram|discord|whatsapp)$")
+    channel: str = Field(default="telegram", pattern="^(telegram|discord)$")
 
 
 class TenantResponse(BaseModel):

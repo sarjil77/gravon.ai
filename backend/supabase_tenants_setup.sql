@@ -11,7 +11,7 @@ create table if not exists public.tenants (
   bot_token       text not null,
   bot_username    text,                        -- @username from Telegram
   ai_model        text not null default 'anthropic/claude-sonnet-4-20250514',
-  channel         text not null default 'telegram' check (channel in ('telegram', 'discord', 'whatsapp')),
+  channel         text not null default 'telegram' check (channel in ('telegram', 'discord')),
   container_id    text,                        -- Docker container ID
   container_port  int,                         -- Mapped host port
   status          text not null default 'provisioning'

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const ConnectionGraphic = () => (
   <div className="relative w-full max-w-lg mx-auto h-64 md:h-80">
-    {/* WhatsApp node */}
+    {/* Telegram node */}
     <motion.div
       animate={{ y: [0, -12, 0] }}
       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -12,7 +12,7 @@ const ConnectionGraphic = () => (
     >
       <div className="glass-card p-5 md:p-6">
         <MessageSquare className="h-8 w-8 md:h-10 md:w-10 text-green-400" />
-        <p className="text-xs text-muted-foreground mt-2">WhatsApp</p>
+        <p className="text-xs text-muted-foreground mt-2">Telegram</p>
       </div>
     </motion.div>
 
@@ -83,7 +83,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10">
-            Connect your WhatsApp, choose a template, and launch your AI assistant
+            Connect your Telegram, choose a template, and launch your AI assistant
             in under 60 seconds. Built for creators and small businesses.
           </p>
 

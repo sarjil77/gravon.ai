@@ -5,20 +5,6 @@ services:
       - "8080:8080"
     depends_on:
       - backend
-      - whatsapp-service
-    restart: unless-stopped
-
-  whatsapp-service:
-    build: ./whatsapp-service
-    ports:
-      - "3001:3001"
-    environment:
-      - WA_PORT=3001
-      - PYTHON_BACKEND=http://backend:8000
-    depends_on:
-      - backend
-    volumes:
-      - ./whatsapp-service/sessions:/app/sessions
     restart: unless-stopped
 
   backend:
@@ -29,8 +15,6 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
-    environment:
-      - WHATSAPP_SERVICE_URL=http://whatsapp-service:3001
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

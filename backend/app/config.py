@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     google_api_key: str = ""
 
-    # WhatsApp Service (Node.js Baileys)
-    whatsapp_service_url: str = "http://localhost:3001"
-
     # Stripe (credit pack payments)
     stripe_secret_key: str = ""
     stripe_publishable_key: str = ""

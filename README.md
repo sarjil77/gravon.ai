@@ -1,7 +1,7 @@
 
 # Gravon.ai
 
-AI for Growth-Driven Businesses. No-code WhatsApp AI Assistant Platform. Connect WhatsApp, choose a template, and launch your AI assistant in under 60 seconds.
+AI for Growth-Driven Businesses. No-code Telegram AI Agent Platform. Connect Telegram, choose a template, and launch your AI agent in under 60 seconds.
 
 ## Project Structure
 
