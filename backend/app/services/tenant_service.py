@@ -58,6 +58,76 @@ async def validate_telegram_token(bot_token: str) -> dict[str, Any]:
         }
 
 
+async def sync_telegram_chat_id(tenant_id: str) -> dict:
+    """
+    Try to capture the Telegram chat_id from a pending getUpdates call.
+    The user must have recently sent a message to the bot (so there is a
+    pending update we can read before OpenClaw's long-poll processes it).
+    On success, stores chat_id in a local tenant file and returns it.
+    """
+    tenant = (
+        supabase_admin.table("tenants")
+        .select("bot_token")
+        .eq("id", tenant_id)
+        .limit(1)
+        .execute()
+    )
+    if not tenant.data:
+        raise ValueError("Tenant not found")
+
+    bot_token = tenant.data[0].get("bot_token")
+    if not bot_token:
+        raise ValueError("No bot token for tenant")
+
+    tenant_dir = _CONFIG_DIR / tenant_id
+    tenant_dir.mkdir(parents=True, exist_ok=True)
+    chat_id_path = tenant_dir / "telegram_chat_id.txt"
+
+    # Return immediately if already stored locally
+    if chat_id_path.exists():
+        existing_chat_id = chat_id_path.read_text(encoding="utf-8").strip()
+        if existing_chat_id:
+            return {"chat_id": existing_chat_id, "already_set": True}
+
+    # Non-blocking getUpdates — reads pending updates without advancing OpenClaw's offset
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(
+            url,
+            params={"limit": 100, "timeout": 0, "allowed_updates": ["message", "callback_query"]},
+        )
+    if resp.status_code != 200:
+        raise ValueError(f"Telegram API error: {resp.text[:200]}")
+
+    data = resp.json()
+    if not data.get("ok"):
+        raise ValueError(f"Telegram error: {data.get('description', 'Unknown error')}")
+
+    updates = data.get("result", [])
+    chat_id = None
+    for update in updates:
+        msg = update.get("message") or (
+            update.get("callback_query", {}).get("message") if update.get("callback_query") else None
+        )
+        if msg:
+            chat_id = msg.get("chat", {}).get("id")
+            if chat_id:
+                break
+
+    if not chat_id:
+        return {
+            "chat_id": None,
+            "already_set": False,
+            "message": "No pending messages found. Send any message to your Telegram bot and try again.",
+        }
+
+    # Persist chat_id in tenant config dir
+    chat_id_str = str(chat_id)
+    chat_id_path.write_text(chat_id_str, encoding="utf-8")
+    logger.info("Stored telegram_chat_id in file for tenant %s", tenant_id[:8])
+    return {"chat_id": chat_id_str, "already_set": False}
+
+
 # ── OpenClaw Config Generation ───────────────────────────────────────────────
 
 def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "telegram", api_key: str | None = None) -> str:
@@ -80,7 +150,7 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
         "channels": {},
         "gateway": {
             "port": 18789,
-            "bind": "lan",
+            "bind": "loopback",
             "auth": {
                 "mode": "token",
                 "token": gw_token,
@@ -311,6 +381,28 @@ async def provision_container(tenant_id: str, bot_token: str, ai_model: str, cha
         "error_message": None,
     }).eq("id", tenant_id).execute()
 
+    # Start socat sidecar proxy to allow backend access to loopback-bound gateway
+    # Bind mode is set to "loopback" to fix WebSocket pairing issues, but this makes
+    # port 18789 unreachable from the Docker network. Socat proxies port 18790 (network-accessible)
+    # to 127.0.0.1:18789 (loopback-only) using the --network container:xxx flag.
+    proxy_name = f"gravon-proxy-{tenant_id[:8]}"
+    socat_cmd = (
+        f'docker run -d '
+        f'--name {proxy_name} '
+        f'--restart unless-stopped '
+        f'--network container:{container_name} '
+        f'alpine/socat TCP-LISTEN:18790,fork,reuseaddr TCP:127.0.0.1:18789'
+    )
+    try:
+        logger.info("Starting socat proxy: %s", socat_cmd)
+        proxy_stdout, proxy_stderr, proxy_rc = await _run_cmd(socat_cmd)
+        if proxy_rc == 0:
+            logger.info("Socat proxy started successfully: %s", proxy_stdout[:12])
+        else:
+            logger.warning("Socat proxy start had warnings: %s", proxy_stderr[:200])
+    except Exception as e:
+        logger.warning("Failed to start socat proxy (non-fatal): %s", e)
+
     return {"container_id": container_id, "port": port}
 
 
@@ -348,9 +440,15 @@ async def restart_container(tenant_id: str, container_id: str) -> bool:
 
 
 async def destroy_container(tenant_id: str, container_id: str) -> bool:
-    """Stop and remove a tenant container."""
+    """Stop and remove a tenant container and its associated socat proxy."""
     await _run_cmd(f"docker stop {container_id}")
     await _run_cmd(f"docker rm {container_id}")
+    
+    # Also remove the socat proxy container
+    proxy_name = f"gravon-proxy-{tenant_id[:8]}"
+    await _run_cmd(f"docker stop {proxy_name}")
+    await _run_cmd(f"docker rm {proxy_name}")
+    
     # Always delete the Supabase row & config, even if container was already gone
     supabase_admin.table("tenants").delete().eq("id", tenant_id).execute()
     # Clean up config directory

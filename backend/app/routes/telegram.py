@@ -252,3 +252,21 @@ async def get_tenant_usage(tenant_id: str):
         .execute()
     )
     return {"usage": result.data}
+
+
+@router.post("/{tenant_id}/sync-chat-id")
+async def sync_telegram_chat_id_endpoint(tenant_id: str):
+    """
+    Capture the Telegram chat_id for a tenant by peeking at pending getUpdates.
+    The user must have recently sent any message to the bot.
+    On success the chat_id is stored in the tenant config folder.
+    """
+    from app.services.tenant_service import sync_telegram_chat_id
+    try:
+        result = await sync_telegram_chat_id(tenant_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error("Failed to sync chat_id for tenant %s: %s", tenant_id, e)
+        raise HTTPException(status_code=500, detail=f"Failed to sync: {str(e)[:200]}")
