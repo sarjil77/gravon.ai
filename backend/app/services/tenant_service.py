@@ -58,76 +58,6 @@ async def validate_telegram_token(bot_token: str) -> dict[str, Any]:
         }
 
 
-async def sync_telegram_chat_id(tenant_id: str) -> dict:
-    """
-    Try to capture the Telegram chat_id from a pending getUpdates call.
-    The user must have recently sent a message to the bot (so there is a
-    pending update we can read before OpenClaw's long-poll processes it).
-    On success, stores chat_id in a local tenant file and returns it.
-    """
-    tenant = (
-        supabase_admin.table("tenants")
-        .select("bot_token")
-        .eq("id", tenant_id)
-        .limit(1)
-        .execute()
-    )
-    if not tenant.data:
-        raise ValueError("Tenant not found")
-
-    bot_token = tenant.data[0].get("bot_token")
-    if not bot_token:
-        raise ValueError("No bot token for tenant")
-
-    tenant_dir = _CONFIG_DIR / tenant_id
-    tenant_dir.mkdir(parents=True, exist_ok=True)
-    chat_id_path = tenant_dir / "telegram_chat_id.txt"
-
-    # Return immediately if already stored locally
-    if chat_id_path.exists():
-        existing_chat_id = chat_id_path.read_text(encoding="utf-8").strip()
-        if existing_chat_id:
-            return {"chat_id": existing_chat_id, "already_set": True}
-
-    # Non-blocking getUpdates — reads pending updates without advancing OpenClaw's offset
-    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(
-            url,
-            params={"limit": 100, "timeout": 0, "allowed_updates": ["message", "callback_query"]},
-        )
-    if resp.status_code != 200:
-        raise ValueError(f"Telegram API error: {resp.text[:200]}")
-
-    data = resp.json()
-    if not data.get("ok"):
-        raise ValueError(f"Telegram error: {data.get('description', 'Unknown error')}")
-
-    updates = data.get("result", [])
-    chat_id = None
-    for update in updates:
-        msg = update.get("message") or (
-            update.get("callback_query", {}).get("message") if update.get("callback_query") else None
-        )
-        if msg:
-            chat_id = msg.get("chat", {}).get("id")
-            if chat_id:
-                break
-
-    if not chat_id:
-        return {
-            "chat_id": None,
-            "already_set": False,
-            "message": "No pending messages found. Send any message to your Telegram bot and try again.",
-        }
-
-    # Persist chat_id in tenant config dir
-    chat_id_str = str(chat_id)
-    chat_id_path.write_text(chat_id_str, encoding="utf-8")
-    logger.info("Stored telegram_chat_id in file for tenant %s", tenant_id[:8])
-    return {"chat_id": chat_id_str, "already_set": False}
-
-
 # ── OpenClaw Config Generation ───────────────────────────────────────────────
 
 def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "telegram", api_key: str | None = None) -> str:
@@ -190,35 +120,6 @@ def generate_openclaw_config(bot_token: str, ai_model: str, channel: str = "tele
             "dmPolicy": "open",
             "allowFrom": ["*"],
         }
-
-    # Enable Gmail hooks support.
-    # When channel is "gmail", the Telegram channel is still needed for delivering
-    # AI-generated email summaries/alerts to the user's Telegram bot.
-    # When channel is "telegram", we also enable hooks so Gmail can be added later.
-    hook_token = secrets.token_hex(16)
-    config["hooks"] = {
-        "enabled": True,
-        "token": hook_token,
-        "path": "/hooks",
-        "presets": ["gmail"],
-        "mappings": [
-            {
-                "match": {"path": "gmail"},
-                "action": "agent",
-                "wakeMode": "now",
-                "name": "Gmail",
-                "sessionKey": "hook:gmail:{{messages[0].id}}",
-                "messageTemplate": (
-                    "New email from {{messages[0].from}}\n"
-                    "Subject: {{messages[0].subject}}\n"
-                    "{{messages[0].snippet}}\n"
-                    "{{messages[0].body}}"
-                ),
-                "deliver": True,
-                "channel": "telegram" if channel == "telegram" or bot_token else "last",
-            },
-        ],
-    }
 
     return json.dumps(config, indent=2)
 
