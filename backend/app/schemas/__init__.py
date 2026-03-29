@@ -127,7 +127,7 @@ class CreditTransactionResponse(BaseModel):
     balance_after: int
     type: str
     description: str | None = None
-    stripe_session_id: str | None = None
+    stripe_session_id: str | None = None  # legacy column name (stores payment session/order id)
     tenant_id: str | None = None
     created_at: datetime | None = None
 

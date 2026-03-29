@@ -34,6 +34,26 @@ import {
 import Navbar from "../components/layout/Navbar";
 import { useAuth } from "../context/AuthContext";
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: any) => {
+      open: () => void;
+      on: (event: string, handler: (response: any) => void) => void;
+    };
+  }
+}
+
+const loadRazorpayScript = async (): Promise<boolean> => {
+  if (window.Razorpay) return true;
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 interface TenantData {
@@ -232,6 +252,13 @@ const Dashboard = () => {
     fetchCredits();
   }, [fetchCredits]);
 
+  // Preload Razorpay checkout script early to reduce modal open failures.
+  useEffect(() => {
+    loadRazorpayScript().catch(() => {
+      // Ignore here; checkout flow shows a user-facing error if loading fails.
+    });
+  }, []);
+
   // ── Buy credits handler ─────────────────────────────────────────────────
 
   const handleBuyCredits = async (packId: string) => {
@@ -244,15 +271,76 @@ const Dashboard = () => {
       );
       if (res.ok) {
         const data = await res.json();
-        if (data.checkout_url) {
-          window.location.href = data.checkout_url;
+        if (!data?.key_id || !data?.order_id || !data?.amount || !data?.currency) {
+          alert("Checkout configuration is incomplete. Please contact support.");
+          return;
+        }
+
+        const razorpayLoaded = await loadRazorpayScript();
+        if (!razorpayLoaded || !window.Razorpay) {
+          alert("Could not load Razorpay checkout. Please try again.");
+          return;
+        }
+
+        const rzp = new window.Razorpay({
+          key: data.key_id,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Gravon AI",
+          description: `${data.pack?.name || "Credit Pack"} (${data.pack?.credits || ""} credits)`,
+          order_id: data.order_id,
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              const verifyRes = await fetch(
+                `/api/credits/verify?user_id=${user.id}&razorpay_order_id=${response.razorpay_order_id}&razorpay_payment_id=${response.razorpay_payment_id}&razorpay_signature=${encodeURIComponent(response.razorpay_signature)}`,
+                { method: "POST" }
+              );
+              if (!verifyRes.ok) {
+                const err = await verifyRes.json().catch(() => ({}));
+                throw new Error(err.detail || "Payment verification failed.");
+              }
+
+              await Promise.all([fetchCredits(), fetchTransactions()]);
+              setShowCreditsPanel(true);
+              alert("Payment successful. Credits added to your account.");
+            } catch (e: any) {
+              alert(e.message || "Payment completed but verification failed. Please contact support.");
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              // User dismissed checkout modal.
+            },
+          },
+          prefill: {
+            name: user.full_name,
+            email: user.email,
+          },
+          theme: {
+            color: "#22d3ee",
+          },
+        });
+
+        rzp.on("payment.failed", (response: any) => {
+          const reason = response?.error?.description || response?.error?.reason || "Payment failed";
+          alert(reason);
+        });
+
+        try {
+          rzp.open();
+        } catch (e: any) {
+          alert(e?.message || "Could not open Razorpay checkout. Please disable popup blockers and try again.");
         }
       } else {
         const err = await res.json().catch(() => ({}));
         alert(err.detail || "Failed to start checkout.");
       }
-    } catch {
-      alert("Network error. Please try again.");
+    } catch (e: any) {
+      alert(e?.message || "Network error. Please try again.");
     } finally {
       setBuyingPack(null);
     }

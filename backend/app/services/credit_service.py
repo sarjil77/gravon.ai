@@ -156,10 +156,11 @@ def add_credits(
     amount: int,
     tx_type: str = "purchase",
     description: str = "",
+    payment_session_id: str | None = None,
     stripe_session_id: str | None = None,
 ) -> dict[str, Any]:
     """
-    Add credits to a user's balance (after Stripe payment, admin grant, etc.).
+    Add credits to a user's balance (after payment, admin grant, etc.).
     Returns the updated balance info.
     """
     balance_row = get_balance(user_id)
@@ -180,8 +181,10 @@ def add_credits(
         "type": tx_type,
         "description": description or f"Added {amount} credits",
     }
-    if stripe_session_id:
-        tx_data["stripe_session_id"] = stripe_session_id
+    session_id = payment_session_id or stripe_session_id
+    if session_id:
+        # Keep legacy column name for backward compatibility.
+        tx_data["stripe_session_id"] = session_id
 
     supabase_admin.table("credit_transactions").insert(tx_data).execute()
 
